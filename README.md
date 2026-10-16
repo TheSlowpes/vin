@@ -60,6 +60,19 @@ for _, vehicle := range decoded {
 
 ## API
 
+### Cancellable requests
+
+Use `DecodeContext(ctx, vin)` and `BatchDecodeContext(ctx, vins)` to pass request deadlines or cancellation. Package-level functions use a thirty-second HTTP timeout.
+
+For custom transport or timeout settings, create a client:
+
+```go
+client := vin.NewClient(&http.Client{Timeout: 10 * time.Second})
+decoded, err := client.Decode(ctx, "1HGCM82633A004352")
+```
+
+`client.BatchDecode(ctx, vins)` supports the same batch limit and per-VIN errors as `BatchDecode`. `VINError` retains NHTSA's `SuggestedVIN`, possible values, and error text so callers can inspect corrections.
+
 ### `Decode(vin string) (VIN, error)`
 
 Decodes one VIN. If NHTSA reports a VIN-specific decode error, the returned error can be inspected as `VINError`.
@@ -83,4 +96,4 @@ Use `String()` to get the original VIN value.
 
 ## Notes
 
-This package calls the public NHTSA VPIC API at `https://vpic.nhtsa.dot.gov/api/`. Tests also call the live API, so they require network access and can fail if the upstream service is unavailable.
+This package calls the public NHTSA VPIC API at `https://vpic.nhtsa.dot.gov/api/`. The `TestClient` tests use an injected HTTP transport and run offline with `go test -run TestClient ./...`. The original decoder integration tests call the live API and require network access.
